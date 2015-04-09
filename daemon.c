@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 	while (1){
 		//Dont block context switches, let the process sleep for some time
 		sleep(1);
-		syslog(LOG_INFO, "Matt Daemon, reporting for duty");
+		syslog(LOG_NOTICE, "Matt Daemon, reporting for duty");
 		//fprintf(fp, "Logging info...\n");
 		//fflush(fp);
 		// Implement and call some function that does core work for this daemon.
