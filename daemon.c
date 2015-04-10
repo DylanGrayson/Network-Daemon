@@ -33,6 +33,19 @@ void daemon_init(void) {
 	close(STDIN_FILENO);
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
+<<<<<<< HEAD
     
+=======
+	// Open a log file in write mode.
+	//fp = fopen ("Log.txt", "w+");
+	while (1){
+		//Dont block context switches, let the process sleep for some time
+		sleep(1);
+		syslog(LOG_NOTICE, "Matt Daemon, reporting for duty");
+		//fprintf(fp, "Logging info...\n");
+		//fflush(fp);
+		// Implement and call some function that does core work for this daemon.
+	}
+>>>>>>> 0abb00f89e908e81a32b98ead9feab63c5e25304
 	//closelog();
 }
