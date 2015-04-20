@@ -6,6 +6,10 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <signal.h>
+#include <pthread.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
-void daemon_init(void);
-void daemon_exit(void);
+extern void daemon_init(void);
+extern void daemon_exit(void);
