@@ -12,15 +12,15 @@ This submission is for the following people:
 #define PORT 23001
 
 void sig_handler(int signo);
+void connection_handler(int * connection);
 
 int main(int argc, char* argv[]) {
     // init daemon
     daemon_init();
 
 	struct sockaddr_in client_address, server_address;
-	int client_socket, connected, n;
+	int client_socket, connected, n, rc;
 	socklen_t sin_size;
-	char buffer[256];
 	
 	bzero(&server_address, sizeof(server_address));
 	client_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -28,6 +28,14 @@ int main(int argc, char* argv[]) {
 	server_address.sin_addr.s_addr = INADDR_ANY;
 	server_address.sin_port = htons(PORT);
 
+    /* Thread Stuff */
+    //create, initialize, and set the thread attribute
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+
+    syslog(LOG_NOTICE, "Matt Daemon: Okay, setting myself up.");
 	if(bind(client_socket, (struct sockaddr *)&server_address, sizeof(server_address)) == -1) {
 		perror("error connecting\n");
 		exit(EXIT_FAILURE);
@@ -37,27 +45,46 @@ int main(int argc, char* argv[]) {
 
     // loop forever
     while (1){
-		
 		sin_size = sizeof(client_address);
+        // wait for connections
 		connected = accept(client_socket, (struct sockaddr *)&client_address, &sin_size);
 		if (connected < 0) 
           perror("ERROR on accept");
 
-		bzero(buffer, 256);
-		n = read(connected, buffer, 255);
-		if (n < 0)
-			perror("ERROR reading from socket");
-		if(buffer[0] == 'q') {
-			break;
-		}
-		n = write(connected, buffer, 18);
+        syslog(LOG_NOTICE, "Matt Daemon: Forking a thread for the new connection");
+        rc = pthread_create(0, &attr, (void *)connection_handler, (int *)&connected);
+        if(rc){
+            syslog(LOG_NOTICE, "ERROR; return code from pthread_create() is %d\n", rc);
+        }
 		
         if (signal(SIGUSR1, sig_handler) == SIG_ERR)
-            printf("\ncan't catch SIGUSR1\n");
+            syslog(LOG_NOTICE, "\ncan't catch SIGUSR1\n");
     }
-     close(connected);
-     close(client_socket);
+    close(client_socket);
     return EXIT_SUCCESS;
+}
+
+// connection handler
+void connection_handler(int * connection){
+    char buffer[256];
+    int n;
+    syslog(LOG_NOTICE, "Entered new connection_handler thread.");
+    while(1) {
+        //syslog(LOG_NOTICE, "Zeroing Buffer.");
+        //bzero(buffer, 256);
+        syslog(LOG_NOTICE, "Reading from socket.");
+        n = read(*connection, buffer, 255);
+
+        if (n < 0)
+            perror("ERROR reading from socket");
+        if(buffer[0] == 'q') {
+            syslog(LOG_NOTICE, "Recieved 'q' from client, killing thread");
+            break;
+        }
+
+        n = write(*connection, buffer, 18);
+    }
+    close(*connection);
 }
 
 // signal handler
