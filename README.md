@@ -13,3 +13,19 @@ This assignment accomplishes the first of threee steps that lead to designing an
 - Logging: I ask you to implement logging to syslog, whenever the deamon needs to output information that normally would be made to standard output and/or standard error.
 - Termination: To terminate a deamon is tricky, as by definition the deamon is decoupled from everything - it is a deamon, after all. One option is to send it a signal. I ask you to prepare the deamon to accept signal SIGUSR1. In case your deamon catches that signal, it is supposed to terminate gracefully, i.e. it will log a last message to syslog, then close the syslog and finally exit. I want you to name the signal handler function deamon_exit()
 - For structural purposes all deamon related code, i.e. all of the above except the main loop, needs to be contained in a function deamon_init(), in a file deamon.c, with associated deamon.h. 
+
+Homework 8 for NAU CS480
+
+###Overview
+
+This assignment completes the second step in our three-part series. In this step you will design and implement a multithreaded echo server.
+
+###Task
+
+**Write a multithreaded network deamon**
+
+The emphasis of this assignment is to get the network part right - the deamon and the threading should not be a problem any more. The server is multithreaded in the sense that is can accept several clients in parallel, each connection being handled by a different thread. The server (or rather its threads) will read characters from the client and immediately return them back to the client. As soon as there is a character 'q' detected in the stream of input characters, the thread will close the connection to the client and exit.
+
+**Write a quick client that can talk to your server**
+
+This client will take lines of text from the user and send it to the server. Any text received from the server is being displayed on the standard output. Concerning timing, I suggest you implement the following semantics: the client takes in a line of text from the stdin and sends it to the server. Then the client will read the response from the server and display it. Then it will return back to taking a line of text from the user etc.
