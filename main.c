@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+    pthread_t threads[100];
 
 
     syslog(LOG_NOTICE, "Matt Daemon: Okay, setting myself up.");
@@ -44,6 +45,7 @@ int main(int argc, char* argv[]) {
 	listen(client_socket, 5);
 
     // loop forever
+    int threadct = 0;
     while (1){
 		sin_size = sizeof(client_address);
         // wait for connections
@@ -52,7 +54,7 @@ int main(int argc, char* argv[]) {
           perror("ERROR on accept");
 
         syslog(LOG_NOTICE, "Matt Daemon: Forking a thread for the new connection");
-        rc = pthread_create(0, &attr, (void *)connection_handler, (int *)&connected);
+        rc = pthread_create(&threads[threadct++], &attr, (void *)connection_handler, (int *)&connected);
         if(rc){
             syslog(LOG_NOTICE, "ERROR; return code from pthread_create() is %d\n", rc);
         }
