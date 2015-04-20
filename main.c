@@ -1,3 +1,11 @@
+/* 
+This submission is for the following people:
+    Conner Swann
+    Dylan Grayson
+    Brandon Paree
+*/
+
+
 #include "daemon.h"
 
 void sig_handler(int signo);
