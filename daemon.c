@@ -1,9 +1,11 @@
 #include "daemon.h"
 
-void daemon_init(void) {
+extern void daemon_init(void) {
 	//FILE *fp= NULL;
 	pid_t process_id = 0;
 	pid_t sid = 0;
+
+	
 	// Create child process
 	process_id = fork();
 	// Indication of fork() failure
@@ -35,7 +37,7 @@ void daemon_init(void) {
 	close(STDERR_FILENO);
 }
 
-void daemon_exit(void) {
+extern void daemon_exit(void) {
     // report one last message to the console
     syslog(LOG_NOTICE, "Daemon: Matt Daemon is taking control of this mission.");
     syslog(LOG_NOTICE, "Matthew McConaughey: Oh my god, he opened the airlock...");
