@@ -8,7 +8,6 @@ This submission is for the following people:
 
 #include "daemon.h"
 
-#define SERVER_ADDR 0
 #define PORT 23001
 
 void sig_handler(int signo);
@@ -18,8 +17,8 @@ int main(int argc, char* argv[]) {
     // init daemon
     daemon_init();
 
-	struct sockaddr_in client_address, server_address;
-	int client_socket, connected, n, rc;
+	struct sockaddr_in server_address;
+	int client_socket, connected, rc;
 	socklen_t sin_size;
 	
 	bzero(&server_address, sizeof(server_address));
@@ -47,6 +46,7 @@ int main(int argc, char* argv[]) {
     // loop forever
     int threadct = 0;
     while (1){
+		struct sockaddr_in client_address;
 		sin_size = sizeof(client_address);
         // wait for connections
 		connected = accept(client_socket, (struct sockaddr *)&client_address, &sin_size);
@@ -70,12 +70,13 @@ int main(int argc, char* argv[]) {
 void connection_handler(int * connection){
     char buffer[256];
     int n;
+    int con = *connection;
     syslog(LOG_NOTICE, "Entered new connection_handler thread.");
     while(1) {
         //syslog(LOG_NOTICE, "Zeroing Buffer.");
         bzero(buffer, 256);
-        syslog(LOG_NOTICE, "Reading from socket.");
-        n = read(*connection, buffer, 255);
+        syslog(LOG_NOTICE, "Reading from socket. %d", con);
+        n = read(con, buffer, 255);
 
         if (n < 0)
             perror("ERROR reading from socket");
@@ -83,10 +84,10 @@ void connection_handler(int * connection){
             syslog(LOG_NOTICE, "Recieved 'q' from client, killing thread");
             break;
         }
-
-        n = write(*connection, buffer, 18);
+        n = write(con, buffer, 18);
     }
-    close(*connection);
+    close(con);
+    pthread_exit(NULL);
 }
 
 // signal handler
