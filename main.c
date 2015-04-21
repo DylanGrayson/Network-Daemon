@@ -73,7 +73,7 @@ void connection_handler(int * connection){
     syslog(LOG_NOTICE, "Entered new connection_handler thread.");
     while(1) {
         //syslog(LOG_NOTICE, "Zeroing Buffer.");
-        //bzero(buffer, 256);
+        bzero(buffer, 256);
         syslog(LOG_NOTICE, "Reading from socket.");
         n = read(*connection, buffer, 255);
 
