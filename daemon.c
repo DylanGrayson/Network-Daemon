@@ -1,3 +1,10 @@
+/* 
+This submission is for the following people:
+    Conner Swann
+    Dylan Grayson
+    Brandon Paree
+*/
+
 #include "daemon.h"
 
 extern void daemon_init(void) {
@@ -17,9 +24,7 @@ extern void daemon_init(void) {
 	// PARENT PROCESS. Need to kill it.
 	if (process_id > 0){
 		printf("process_id of child process %d \n", process_id);
-        // printf("Killing Parent Process!\n");
-		// return success in exit status
-		//exit(0);
+
 	}
 	//unmask the file mode
 	umask(0);
