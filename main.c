@@ -9,17 +9,25 @@ This submission is for the following people:
 #include "daemon.h"
 
 #define PORT 23001
+#define BANK_SIZE 200
 
-int threeAHelper(int num);
-int threeAplusOne(int num, int count);
-
-struct answer {
-	int connection;
+typedef struct answer {
 	int in;
 	int out;
-};
+} Answer;
+
+typedef struct data_param {
+	int connection;
+	int len;
+	pthread_mutex_t * mutex;
+	struct answer * master_list;
+} DataParam;
+
+
+int threeAHelper(int num, DataParam * data);
+int threeAplusOne(int num, int count, DataParam * data);
 void sig_handler(int signo);
-void connection_handler(int * connection);
+void connection_handler(void * data);
 
 int main(int argc, char* argv[]) {
     // init daemon
@@ -57,9 +65,13 @@ int main(int argc, char* argv[]) {
 
     // loop forever
     int threadct = 0;
-    
-    //struct answer answer_bank[100];
-    
+    //build our data parameter struct to be the master
+    DataParam data;
+    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    data.mutex = &mutex;
+    Answer * answer_bank = malloc(sizeof(Answer) * BANK_SIZE);
+    data.master_list = answer_bank;
+    data.len = 0;
     while (1){
 		struct sockaddr_in client_address;
 		sin_size = sizeof(client_address);
@@ -67,9 +79,10 @@ int main(int argc, char* argv[]) {
 		connected = accept(client_socket, (struct sockaddr *)&client_address, &sin_size);
 		if (connected < 0) 
           perror("ERROR on accept");
-
+		data.connection = connected;
         syslog(LOG_NOTICE, "Matt Daemon: Forking a thread for the new connection");
-        rc = pthread_create(&threads[threadct++], &attr, (void *)connection_handler, (int *)&connected);
+        //pass each thread the address of data
+        rc = pthread_create(&threads[threadct++], &attr, (void *)connection_handler, (void *)&data);
         if(rc){
             syslog(LOG_NOTICE, "ERROR; return code from pthread_create() is %d\n", rc);
         }
@@ -82,15 +95,17 @@ int main(int argc, char* argv[]) {
 }
 
 // connection handler
-void connection_handler(int * connection){
+void connection_handler(void * data){
     char buffer[256];
     int n;
-    int con = *connection;
+	DataParam * dp;
+	dp = (DataParam*)data;
+    int con = (*dp).connection;
     syslog(LOG_NOTICE, "Entered new connection_handler thread.");
     while(1) {
         //syslog(LOG_NOTICE, "Zeroing Buffer.");
         bzero(buffer, 256);
-        syslog(LOG_NOTICE, "Reading from socket. %d", con);
+        syslog(LOG_NOTICE, "Reading From Socket. %d", con);
         n = read(con, buffer, 255);
 		int num = atoi(buffer);
         if (n < 0)
@@ -103,7 +118,8 @@ void connection_handler(int * connection){
         if(num <= 0){
 			debuf = "Not a Number!";
 		}else{
-			sprintf(debuf, "%d", threeAHelper(num));
+			//get three a plus 1 answer and put it in debuf
+			sprintf(debuf, "%d", threeAHelper(num, dp));
 		}
 		n = write(con, debuf, 18);
     }
@@ -111,20 +127,54 @@ void connection_handler(int * connection){
     pthread_exit(NULL);
 }
 
-int threeAHelper(int num) {
-	int s = threeAplusOne(num, 0);
-	return s;
+int threeAHelper(int num, DataParam* data) {
+	//run algorithm and get answer in ans
+	int ans = threeAplusOne(num, 0, data);
+	int i;
+	//initialize mutex
+	pthread_mutex_t * mutex = (*data).mutex;
+	//see if answer already exists in the answer bank
+	for (i = 0; i < (*data).len; i++){
+		pthread_mutex_lock(mutex);
+		if ((*((*data).master_list + i)).in == num){
+			pthread_mutex_unlock(mutex);
+			return ans;
+		}
+		pthread_mutex_unlock(mutex);
+	}
+	//otherwise add it
+	pthread_mutex_lock(mutex);
+	(*((*data).master_list + i)).in = num;
+	(*((*data).master_list + i)).out = ans;
+	(*data).len += 1;
+	pthread_mutex_unlock(mutex);
+	return ans;
 }
 
-int threeAplusOne(int num, int count) {
+int threeAplusOne(int num, int count, DataParam* data) {
 	if (num == 1) {
+		//base case
 		return count;
 	}
-	else if (num % 2 == 0) {
-		return threeAplusOne(num / 2, count + 1);
+	//check if current num is in answer bank
+	int i;
+	pthread_mutex_t * mutex = (*data).mutex;
+	for (i = 0; i < (*data).len; i++){
+		pthread_mutex_lock(mutex);
+		if ((*((*data).master_list + i)).in == num){
+			//if so: use that answer + count
+			int ans = (*((*data).master_list + i)).out;
+			syslog(LOG_NOTICE, "Fetched the answer %d", ans);
+			pthread_mutex_unlock(mutex);
+			return ans + count;
+		}
+		pthread_mutex_unlock(mutex);
+	}
+	if (num % 2 == 0) {
+		return threeAplusOne(num / 2, count + 1, data);
 	}
 	else {
-		return threeAplusOne((3 * num) + 1, count + 1);
+		return threeAplusOne((3 * num) + 1, count + 1, data);
 	}
 }
 

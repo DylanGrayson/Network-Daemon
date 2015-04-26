@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
         
     while(1){
 		//get user input
-		printf("Please enter the message: ");
+		printf("IN| ");
 		bzero(buffer,256);
 		fgets(buffer,255,stdin);
 		//write input to server
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 		n = read(sockfd,buffer,255);
 		if (n < 0) 
 			 perror("ERROR reading from socket");
-			 printf("%s\n",buffer);
+		printf("OUT| %s\n",buffer);
 		 }
     close(sockfd);
     return 0;
