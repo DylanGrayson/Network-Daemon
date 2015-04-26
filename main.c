@@ -9,7 +9,7 @@ This submission is for the following people:
 #include "daemon.h"
 
 #define PORT 23001
-#define BANK_SIZE 200
+#define BANK_SIZE 1000
 
 typedef struct answer {
 	int in;
