@@ -164,7 +164,7 @@ int threeAplusOne(int num, int count, DataParam* data) {
 		if ((*((*data).master_list + i)).in == num){
 			//if so: use that answer + count
 			int ans = (*((*data).master_list + i)).out;
-			syslog(LOG_NOTICE, "Fetched the answer %d", ans);
+			syslog(LOG_NOTICE, "Fetched the answer %d for %d", ans, num);
 			pthread_mutex_unlock(mutex);
 			return ans + count;
 		}
