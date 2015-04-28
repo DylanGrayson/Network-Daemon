@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
         perror("ERROR opening socket");
-    server = gethostbyname(HOST);
+    server = gethostbyname(argv[1]);
     if (server == NULL) {
         fprintf(stderr,"ERROR, no such host\n");
         exit(0);
