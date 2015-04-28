@@ -1,4 +1,10 @@
 # Network-Daemon
+
+Three Part Project for NAU CS480 by:
+Conner Swann
+Dylan Grayson
+Brandon Paree
+
 Homework 7 for NAU CS480
 
 ###Overview
